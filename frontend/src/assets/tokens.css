@@ -1,0 +1,48 @@
+:root {
+  /* Surfaces */
+  --bg:         #0a0b0d;
+  --bg2:        #101216;
+  --surface:    #16181c;
+  --surface-hi: #1e2126;
+
+  /* Borders */
+  --border:     rgba(255,255,255,0.07);
+  --border-hi:  rgba(255,255,255,0.12);
+
+  /* Text */
+  --text:       #f0f1f3;
+  --text-dim:   #9ca0a8;
+  --text-mute:  #5b6068;
+
+  /* Brand */
+  --accent:     #c79bff;
+  --accent-dim: rgba(199,155,255,0.13);
+  --accent-ink: #0a0b0d;
+
+  /* Semantic */
+  --danger:     #ff7a7a;
+  --danger-bg:  rgba(255,122,122,0.08);
+  --amber:      #ffc26b;
+  --amber-bg:   rgba(255,194,107,0.10);
+  --success:    #7cf2a0;
+  --success-bg: rgba(124,242,160,0.10);
+
+  /* Avatar palette (hash user.id % 6 + 1) */
+  --u1: #c79bff;
+  --u2: #ffb86b;
+  --u3: #7cf2a0;
+  --u4: #9bd9ff;
+  --u5: #ff9ec7;
+  --u6: #ffd166;
+
+  /* Typography */
+  --font-sans: "Geist", "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radii */
+  --r-pill:  999px;
+  --r-chip:  12px;
+  --r-field: 12px;
+  --r-card:  16px;
+  --r-mark:  14px;
+}

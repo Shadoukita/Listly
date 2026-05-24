@@ -1,0 +1,42 @@
+{
+  "error.token_missing":        "Kein Token vorhanden",
+  "error.token_expired":        "Sitzung abgelaufen — bitte erneut anmelden",
+  "error.token_invalid":        "Ungültiger Token",
+  "error.user_not_found":       "Benutzer nicht gefunden",
+  "error.admins_only":          "Nur für Admins",
+  "error.invalid_credentials":  "Ungültiger Benutzername oder Passwort",
+
+  "error.setup_done":           "Einrichtung bereits abgeschlossen",
+  "error.credentials_required": "Benutzername und Passwort erforderlich",
+  "error.password_too_short":   "Passwort muss mind. 6 Zeichen lang sein",
+  "error.username_taken":       "Benutzername bereits vergeben",
+  "error.passwords_mismatch":   "Passwörter stimmen nicht überein",
+
+  "error.current_pw_required":  "Aktuelles Passwort eingeben",
+  "error.current_pw_wrong":     "Aktuelles Passwort ist falsch",
+
+  "error.not_found":            "Nicht gefunden",
+  "error.no_access":            "Kein Zugriff",
+  "error.household_admins_only":"Nur Haushalt-Admins",
+  "error.household_owner_only": "Nur der Haushalt-Eigentümer kann das tun",
+  "error.cannot_change_own_role": "Du kannst deine eigene Rolle nicht ändern",
+  "error.invalid_role":         "Ungültige Rolle",
+  "error.cannot_remove_self":   "Du kannst dich nicht selbst entfernen",
+  "error.cannot_delete_self":   "Du kannst dich nicht selbst löschen",
+
+  "error.invite_invalid":       "Ungültiger oder bereits verwendeter Einladungslink",
+  "error.invite_already_used":  "Einladung bereits verwendet",
+
+  "error.already_member":       "Bereits Mitglied",
+  "error.household_not_public": "Nicht gefunden oder nicht öffentlich",
+
+  "error.url_required":         "URL erforderlich",
+
+  "error.no_file":              "Keine Datei angegeben",
+  "error.no_filename":          "Kein Dateiname",
+  "error.invalid_file_type":    "Ungültiger Dateityp. Erlaubt: jpg, jpeg, png, webp, gif",
+  "error.image_download_fail":  "Bild konnte nicht von der URL heruntergeladen werden",
+
+  "error.name_required":        "Name ist erforderlich",
+  "error.bulk_ids_required":    "Keine IDs angegeben"
+}

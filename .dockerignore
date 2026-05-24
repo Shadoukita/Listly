@@ -1,0 +1,63 @@
+# Node
+frontend/node_modules
+frontend/.vite
+
+# Frontend build — Docker rebuilds from source
+frontend/dist
+
+# Database — lives in the Docker volume, not the image
+backend/database.db
+*.db
+*.sqlite
+
+# Secrets — must come from environment, never baked in
+backend/.env
+docker/.env
+backend/secret_key.txt
+
+# Uploaded assets — live in the Docker volume, not the image
+backend/assets/
+
+# Python cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+venv/
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docs (not needed at runtime)
+doc/
+backend/doc/
+frontend/doc/
+*.md
+PROGRESS.md
+
+# Local scripts & notes
+*.bat
+guide.txt
+
+# AI tools
+.claude/
+CLAUDE.md
+.cursor/
+.cursorrules
+.aider*
+.continue/
+.codeium/
+.copilot/
+memory/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/

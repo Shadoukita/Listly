@@ -1,0 +1,55 @@
+# Environment & secrets
+docker/.env
+backend/.env
+backend/secret_key.txt
+
+# Database
+backend/database.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded assets (runtime, not source)
+backend/assets/
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local scripts & notes
+*.bat
+guide.txt
+
+# AI tools
+.claude/
+CLAUDE.md
+.cursor/
+.cursorrules
+.aider*
+.continue/
+.codeium/
+.copilot/
+memory/
