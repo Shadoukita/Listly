@@ -127,6 +127,8 @@ There's also a global `admin` flag on user accounts (separate from household rol
 - [ ] **Real-time sync** — WebSocket or SSE instead of polling
 - [ ] **Multi-arch Docker image** — amd64 + arm64 for Raspberry Pi hosting
 
+
+
 ---
 
 ## Docs

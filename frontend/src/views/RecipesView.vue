@@ -54,12 +54,33 @@
         </div>
       </div>
 
+      <!-- Search -->
+      <div class="search-bar">
+        <AppIcon :d="I.search" :size="15" class="search-icon" />
+        <input
+          v-model="searchQuery"
+          class="search-input"
+          type="search"
+          :placeholder="$t('recipes.searchPlaceholder')"
+          autocomplete="off"
+        />
+        <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''" :title="$t('global.close')">
+          <AppIcon :d="I.x" :size="13" />
+        </button>
+      </div>
+
       <!-- Filters -->
       <div class="filter-bar">
         <div class="filter-group">
           <Chip :active="activeTab === 'all'"        @click="activeTab = 'all'">{{ $t('recipes.filterAll') }}</Chip>
           <Chip :active="activeTab === 'households'" @click="activeTab = 'households'">{{ $t('recipes.filterHouseholds') }}</Chip>
           <Chip :active="activeTab === 'mine'"       @click="activeTab = 'mine'">{{ $t('recipes.filterMine') }}</Chip>
+          <Chip :active="activeTab === 'favorites'"  @click="activeTab = 'favorites'">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px">
+              <path :d="I.heart" :fill="activeTab === 'favorites' ? 'currentColor' : 'none'" />
+            </svg>
+            {{ $t('recipes.filterFavorites') }}
+          </Chip>
         </div>
         <div class="divider" />
         <div class="filter-group tag-group" v-if="allTags.length">
@@ -113,11 +134,12 @@
       </div>
       <div v-else-if="!filtered.length" class="empty-state">
         <div class="empty-icon">
-          <AppIcon :d="I.chef" :size="28" />
+          <AppIcon :d="searchQuery ? I.search : I.chef" :size="28" />
         </div>
-        <div class="empty-title">{{ $t('recipes.noRecipesTitle') }}</div>
-        <p class="empty-sub">{{ $t('recipes.noRecipesDesc') }}</p>
-        <router-link to="/recipes/new">
+        <div class="empty-title">{{ searchQuery ? $t('recipes.noSearchResults') : $t('recipes.noRecipesTitle') }}</div>
+        <p class="empty-sub">{{ searchQuery ? $t('recipes.noSearchResultsDesc', { q: searchQuery }) : $t('recipes.noRecipesDesc') }}</p>
+        <AppButton v-if="searchQuery" size="sm" @click="searchQuery = ''">{{ $t('recipes.clearSearch') }}</AppButton>
+        <router-link v-else to="/recipes/new">
           <AppButton size="sm">
             <AppIcon :d="I.plus" :size="14" :sw="2.2" /> {{ $t('recipes.newRecipe') }}
           </AppButton>
@@ -163,6 +185,7 @@ const recipes = useRecipeStore()
 const loading    = ref(true)
 const activeTab  = ref('all')
 const activeTag  = ref('')
+const searchQuery = ref('')
 const viewMode   = ref('grid')
 const sortBy     = ref('')   // '' | 'cal-asc' | 'cal-desc'
 const selecting  = ref(false)
@@ -196,11 +219,23 @@ const filtered = computed(() => {
     list = list.filter(r => myHouseholdIds.value.has(r.household_id))
   } else if (activeTab.value === 'mine') {
     list = list.filter(r => r.created_by === auth.user?.id)
+  } else if (activeTab.value === 'favorites') {
+    list = list.filter(r => r.is_favorited)
   }
   if (activeTag.value) list = list.filter(r => {
     const tags = r.tags_json ? JSON.parse(r.tags_json) : []
     return tags.includes(activeTag.value)
   })
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter(r => {
+      if ((r.name || '').toLowerCase().includes(q)) return true
+      if ((r.description || '').toLowerCase().includes(q)) return true
+      const tags = r.tags_json ? JSON.parse(r.tags_json) : []
+      if (tags.some(t => t.toLowerCase().includes(q))) return true
+      return false
+    })
+  }
   if (sortBy.value === 'cal-asc') {
     list = [...list].sort((a, b) => (a.calories ?? Infinity) - (b.calories ?? Infinity))
   } else if (sortBy.value === 'cal-desc') {
@@ -338,6 +373,29 @@ onMounted(async () => {
 .title-row { display: flex; align-items: flex-end; justify-content: space-between; }
 .page-title { font-size: 32px; font-weight: 600; letter-spacing: -0.8px; line-height: 1.1; margin: 6px 0 0; }
 .page-sub { font-size: 13px; color: var(--text-dim); margin: 6px 0 0; max-width: 480px; }
+
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+.search-bar:focus-within { border-color: var(--border-hi); }
+.search-icon { color: var(--text-mute); flex-shrink: 0; }
+.search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-size: 14px; padding: 11px 0;
+  font-family: inherit;
+}
+.search-input::placeholder { color: var(--text-mute); }
+.search-input::-webkit-search-cancel-button { display: none; }
+.search-clear {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  color: var(--text-mute); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.search-clear:hover { background: var(--surface-hi); color: var(--text); }
 
 .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .filter-group { display: flex; align-items: center; gap: 6px; }

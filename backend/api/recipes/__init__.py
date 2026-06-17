@@ -12,4 +12,5 @@ from api.recipes import (  # noqa: F401, E402
     bulk_delete,
     import_url,
     push_to_list,
+    favorite,
 )

@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import g, jsonify
 
 from api.recipes import bp
 from core.security import token_required
@@ -11,11 +11,14 @@ from db.models import recipe_dict
 @bp.get("/recipes/<int:rid>")
 @token_required
 def get_recipe(rid):
-    row = get_db().execute("""
+    uid = g.current_user["id"]
+    row = get_db().execute(f"""
         SELECT r.*, COALESCE(u.display_name, u.username) AS created_by_name,
-               u.profile_image AS created_by_profile_image
+               u.profile_image AS created_by_profile_image,
+               CASE WHEN rf.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_favorited
         FROM recipes r
         LEFT JOIN users u ON r.created_by = u.id
+        LEFT JOIN recipe_favorites rf ON rf.recipe_id = r.id AND rf.user_id = {uid}
         WHERE r.id = ?
     """, (rid,)).fetchone()
     if not row:

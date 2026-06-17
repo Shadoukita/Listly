@@ -105,3 +105,11 @@ CREATE TABLE IF NOT EXISTS recipes (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_recipes_household ON recipes(household_id);
+
+CREATE TABLE IF NOT EXISTS recipe_favorites (
+    user_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, recipe_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON recipe_favorites(user_id);

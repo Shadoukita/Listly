@@ -4,6 +4,7 @@
     :class="{ 'is-selecting': selecting, 'is-selected': selected, 'is-pressing': pressing }"
     @pointerdown="onPointerDown"
     @pointerup="onPointerUp"
+    @pointercancel="cancelPress"
     @pointerleave="onPointerLeave"
     @pointermove="onPointerMove"
     @click="onClick"
@@ -19,6 +20,19 @@
       <div class="img-badge">
         <AppIcon :d="I.chef" :size="10" :sw="2.2" /> {{ $t('recipes.badge') }}
       </div>
+      <button
+        v-if="!selecting"
+        class="fav-btn"
+        :class="{ 'is-fav': recipe.is_favorited }"
+        @pointerdown.stop
+        @pointerup.stop
+        @click.stop="onFavorite"
+        :title="recipe.is_favorited ? $t('recipes.unfavorite') : $t('recipes.favorite')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path :d="I.heart" :fill="recipe.is_favorited ? 'currentColor' : 'none'" />
+        </svg>
+      </button>
     </div>
 
     <!-- Body -->
@@ -73,12 +87,14 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { avatarColor } from '../stores/auth'
+import { useRecipeStore } from '../stores/recipes'
 import Avatar from './Avatar.vue'
 import Chip from './Chip.vue'
 import AppIcon from './AppIcon.vue'
 import { I } from './icons.js'
 
 const { t } = useI18n()
+const recipeStore = useRecipeStore()
 
 const props = defineProps({
   recipe:             { type: Object,  required: true },
@@ -87,6 +103,15 @@ const props = defineProps({
   selected:           { type: Boolean, default: false },
 })
 const emit = defineEmits(['open', 'long-press', 'select-toggle'])
+
+const favPending = ref(false)
+async function onFavorite(e) {
+  e.stopPropagation()
+  if (favPending.value) return
+  favPending.value = true
+  try { await recipeStore.toggleFavorite(props.recipe.id) }
+  finally { favPending.value = false }
+}
 
 const PALETTE   = ['#c79bff','#ffb86b','#7cf2a0','#9bd9ff','#ff9ec7','#ffd166']
 const cardColor = computed(() => PALETTE[(((props.recipe.id || 1) - 1) % PALETTE.length)])
@@ -119,8 +144,10 @@ let startY        = 0
 
 function onPointerDown(e) {
   if (e.button !== undefined && e.button !== 0) return
-  e.preventDefault()
-  // Capture pointer so mouse events keep firing even if cursor leaves the element
+  // Do NOT call preventDefault — it would block native touch-scroll on mobile.
+  // setPointerCapture ensures we still receive pointerup/pointermove even if the
+  // finger drifts off the element; pointercancel fires if the browser decides to
+  // take over the gesture (e.g. vertical scroll), which we handle below.
   e.currentTarget.setPointerCapture(e.pointerId)
 
   didLongPress = false
@@ -154,7 +181,7 @@ function onPointerLeave() { if (!pressing.value) return; cancelPress() }
 function onPointerMove(e) {
   const dx = e.clientX - startX
   const dy = e.clientY - startY
-  if (Math.abs(dx) > 6 || Math.abs(dy) > 6) cancelPress()
+  if (Math.abs(dx) > 12 || Math.abs(dy) > 12) cancelPress()
 }
 
 function cancelPress() {
@@ -188,7 +215,9 @@ function onClick() {
   transition: border-color 0.15s, filter 0.15s, transform 0.15s;
   position: relative;
   user-select: none;
-  touch-action: none;
+  /* pan-y: allow native vertical scrolling on mobile while still tracking
+     horizontal drags and long-presses via pointer events */
+  touch-action: pan-y;
 }
 .recipe-card:not(.is-selecting):hover { border-color: var(--border-hi); transform: translateY(-1px); }
 .recipe-card.is-selecting { cursor: default; }
@@ -228,6 +257,20 @@ function onClick() {
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.4px;
   text-transform: uppercase; backdrop-filter: blur(8px);
 }
+.fav-btn {
+  position: absolute; top: 10px; right: 10px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.35); backdrop-filter: blur(6px);
+  color: rgba(255,255,255,0.55);
+  transition: color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.fav-btn.is-fav {
+  color: #ff6b8a;
+  background: rgba(255, 107, 138, 0.18);
+}
+.fav-btn:hover { background: rgba(255,107,138,0.25); color: #ff6b8a; }
 
 .card-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
 .recipe-name { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }

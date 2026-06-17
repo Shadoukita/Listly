@@ -54,9 +54,22 @@ export const useRecipeStore = defineStore('recipes', () => {
     return result
   }
 
-  async function pushToList(id) {
-    return await api(`/recipes/${id}/push-to-list`, 'POST')
+  async function pushToList(id, items = null) {
+    return await api(`/recipes/${id}/push-to-list`, 'POST', items ? { items } : {})
   }
 
-  return { items, allItems, current, load, loadAll, get, create, importFromUrl, update, remove, bulkRemove, pushToList }
+  async function toggleFavorite(id) {
+    const recipe = allItems.value.find(r => r.id === id) || current.value
+    const wasFav = recipe?.is_favorited ?? false
+    const method = wasFav ? 'DELETE' : 'POST'
+    const result = await api(`/recipes/${id}/favorite`, method)
+    // Update in-place everywhere
+    const patch = r => r.id === id ? { ...r, is_favorited: result.is_favorited } : r
+    allItems.value = allItems.value.map(patch)
+    items.value    = items.value.map(patch)
+    if (current.value?.id === id) current.value = { ...current.value, is_favorited: result.is_favorited }
+    return result.is_favorited
+  }
+
+  return { items, allItems, current, load, loadAll, get, create, importFromUrl, update, remove, bulkRemove, pushToList, toggleFavorite }
 })

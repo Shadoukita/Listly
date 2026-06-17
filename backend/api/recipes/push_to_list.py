@@ -25,13 +25,33 @@ def push_to_list(rid):
     if not has_access(target_hh):
         target_hh = row["household_id"]
 
-    try:
-        ingredients = json.loads(row["ingredients_json"] or "[]")
-    except Exception:
-        ingredients = []
+    body = request.get_json(silent=True) or {}
+
+    # If the frontend passes pre-scaled items, use those directly.
+    custom_items = body.get("items")
+
+    if custom_items is not None:
+        flat = custom_items
+    else:
+        try:
+            ingredients = json.loads(row["ingredients_json"] or "[]")
+        except Exception:
+            ingredients = []
+
+        # Support both the new sectioned format and the legacy flat format.
+        # New:  [{"name": "Section", "items": [{"name": "Butter", "quantity": "125g"}, …]}, …]
+        # Old:  [{"name": "Butter", "quantity": "125g"}, …]
+        def _flat_items(ing_list):
+            if ing_list and isinstance(ing_list[0], dict) and "items" in ing_list[0]:
+                for section in ing_list:
+                    yield from (section.get("items") or [])
+            else:
+                yield from ing_list
+
+        flat = list(_flat_items(ingredients))
 
     added = 0
-    for ing in ingredients:
+    for ing in flat:
         name = (ing.get("name", "") if isinstance(ing, dict) else str(ing)).strip()
         if not name:
             continue

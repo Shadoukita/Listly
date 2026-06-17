@@ -11,6 +11,17 @@
         <Pill v-if="!recipe.is_public" tone="neutral">
           <AppIcon :d="I.lock" :size="10" /> {{ $t('recipes.householdOnly') }}
         </Pill>
+        <button
+          class="fav-topbar-btn"
+          :class="{ 'is-fav': recipe.is_favorited }"
+          @click="onFavorite"
+          :title="recipe.is_favorited ? $t('recipes.unfavorite') : $t('recipes.favorite')"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path :d="I.heart" :fill="recipe.is_favorited ? 'currentColor' : 'none'" />
+          </svg>
+          {{ recipe.is_favorited ? $t('recipes.unfavorite') : $t('recipes.favorite') }}
+        </button>
         <router-link v-if="canEdit" :to="`/recipes/${recipe.id}/edit`">
           <AppButton variant="outline" size="sm">
             <AppIcon :d="I.settings" :size="14" /> {{ $t('global.edit') }}
@@ -64,9 +75,22 @@
             <div class="mono">{{ $t('recipes.cook') }}</div>
             <div class="stat-val">{{ recipe.cook_time || '–' }}</div>
           </div>
-          <div class="stat-card">
+          <!-- Servings — interactive stepper when a number is parseable -->
+          <div class="stat-card serving-stat-card">
             <div class="mono">{{ $t('recipes.servings') }}</div>
-            <div class="stat-val">{{ recipe.servings || '–' }}</div>
+            <template v-if="baseServings">
+              <div class="serving-stepper">
+                <button class="svc-btn" @click="currentServings = Math.max(1, currentServings - 1)" :disabled="currentServings <= 1">−</button>
+                <span class="svc-num">{{ currentServings }}</span>
+                <button class="svc-btn" @click="currentServings++">+</button>
+              </div>
+              <div v-if="currentServings !== baseServings" class="svc-note mono">
+                {{ $t('recipes.originalServings', { n: baseServings }) }}
+              </div>
+            </template>
+            <template v-else>
+              <div class="stat-val">{{ recipe.servings || '–' }}</div>
+            </template>
           </div>
           <div class="stat-card">
             <div class="mono">{{ $t('recipes.difficulty') }}</div>
@@ -85,20 +109,42 @@
           <div>
             <div class="col-header">
               <h3 class="col-title">{{ $t('recipes.ingredients') }}</h3>
-              <div class="mono">{{ ingredients.length }}</div>
+              <div class="mono">{{ totalIngredients }}</div>
             </div>
+            <!-- Scale banner — visible when servings differ from original -->
+            <div v-if="baseServings && currentServings !== baseServings" class="scale-banner">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/>
+              </svg>
+              {{ $t('recipes.scaledFor', { n: currentServings }) }}
+            </div>
+
             <div class="ingredient-list">
-              <div
-                v-for="(ing, i) in ingredients" :key="i"
-                class="ingredient-row"
-                :class="{ divide: i > 0 }"
-              >
-                <span class="ing-check" :class="{ checked: checkedIng.has(i) }" @click="toggleIng(i)">
-                  <AppIcon v-if="checkedIng.has(i)" :d="I.check" :size="11" :sw="3" />
-                </span>
-                <span class="ing-name" :class="{ 'ing-done': checkedIng.has(i) }">{{ ing.name }}</span>
-                <span class="ing-qty">{{ ing.quantity }}</span>
-              </div>
+              <template v-for="(section, si) in scaledIngredientSections" :key="si">
+                <!-- Section header — shown when there are multiple sections or the section has a name -->
+                <div
+                  v-if="section.name || ingredientSections.length > 1"
+                  class="ing-section-header"
+                  :class="{ 'ing-section-divider': si > 0 }"
+                >
+                  {{ section.name || `${$t('recipes.ingredients')} ${si + 1}` }}
+                </div>
+                <div
+                  v-for="(ing, ii) in section.items" :key="`${si}:${ii}`"
+                  class="ingredient-row"
+                  :class="{ divide: ii > 0 || (si > 0 && !section.name) }"
+                >
+                  <span
+                    class="ing-check"
+                    :class="{ checked: checkedIng.has(`${si}:${ii}`) }"
+                    @click="toggleIng(`${si}:${ii}`)"
+                  >
+                    <AppIcon v-if="checkedIng.has(`${si}:${ii}`)" :d="I.check" :size="11" :sw="3" />
+                  </span>
+                  <span v-if="ing.quantity" class="ing-qty">{{ ing.quantity }}</span>
+                  <span class="ing-name" :class="{ 'ing-done': checkedIng.has(`${si}:${ii}`) }">{{ ing.name }}</span>
+                </div>
+              </template>
             </div>
 
             <!-- Push to list CTA -->
@@ -108,11 +154,11 @@
               </div>
               <div class="push-text">
                 <div class="push-title">{{ $t('recipes.addAllToList') }}</div>
-                <div class="push-sub">{{ $t('recipes.pushSub', { n: ingredients.length, hh: hh.current?.name }) }}</div>
+                <div class="push-sub">{{ $t('recipes.pushSub', { n: totalIngredients, hh: hh.current?.name }) }}</div>
               </div>
             </div>
             <AppButton size="sm" :full="true" :disabled="pushing" @click="pushToList">
-              <AppIcon :d="I.cart" :size="14" /> {{ pushing ? $t('recipes.adding') : $t('recipes.addToList', { n: ingredients.length }) }}
+              <AppIcon :d="I.cart" :size="14" /> {{ pushing ? $t('recipes.adding') : $t('recipes.addToList', { n: totalIngredients }) }}
             </AppButton>
             <div v-if="pushed" class="push-confirm">
               <AppIcon :d="I.check" :size="13" /> {{ $t('recipes.addedConfirm') }}
@@ -162,7 +208,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, avatarColor } from '../stores/auth'
@@ -183,11 +229,13 @@ const auth    = useAuthStore()
 const hh      = useHouseholdStore()
 const recipes = useRecipeStore()
 
-const loading    = ref(true)
-const recipe     = ref(null)
-const checkedIng = ref(new Set())
-const pushing    = ref(false)
-const pushed     = ref(false)
+const loading         = ref(true)
+const recipe          = ref(null)
+const checkedIng      = ref(new Set())
+const pushing         = ref(false)
+const pushed          = ref(false)
+const favPending      = ref(false)
+const currentServings = ref(0)  // 0 = not yet initialized
 
 const PALETTE = ['#c79bff','#ffb86b','#7cf2a0','#9bd9ff','#ff9ec7','#ffd166']
 const cardColor = computed(() => {
@@ -217,8 +265,88 @@ const canDelete = computed(() =>
 const tags = computed(() => {
   try { return JSON.parse(recipe.value?.tags_json || '[]') } catch { return [] }
 })
-const ingredients = computed(() => {
-  try { return JSON.parse(recipe.value?.ingredients_json || '[]') } catch { return [] }
+
+// Support both new sectioned format and legacy flat format
+const ingredientSections = computed(() => {
+  try {
+    const parsed = JSON.parse(recipe.value?.ingredients_json || '[]')
+    if (!parsed.length) return [{ name: '', items: [] }]
+    // New format: first element has an "items" key
+    if (parsed[0] && 'items' in parsed[0]) return parsed
+    // Legacy flat format: wrap in a single unnamed section
+    return [{ name: '', items: parsed }]
+  } catch { return [{ name: '', items: [] }] }
+})
+const totalIngredients = computed(() =>
+  ingredientSections.value.reduce((sum, s) => sum + (s.items?.length || 0), 0)
+)
+
+// ─── Serving calculator ───────────────────────────────────────────────────────
+
+// Parse the first number found in the servings string  e.g. "4 Portionen" → 4
+const baseServings = computed(() => {
+  const s = recipe.value?.servings
+  if (!s) return null
+  const m = String(s).match(/\d+/)
+  if (!m) return null
+  const n = parseInt(m[0])
+  return n > 0 ? n : null
+})
+
+const scaleFactor = computed(() => {
+  if (!baseServings.value || !currentServings.value) return 1
+  return currentServings.value / baseServings.value
+})
+
+// Initialize currentServings once baseServings is known
+watch(baseServings, (n) => {
+  if (n && !currentServings.value) currentServings.value = n
+}, { immediate: true })
+
+// Parse a leading number out of a quantity string and return { num, rest }
+function _parseQtyNum(qty) {
+  if (!qty) return null
+  let s = qty.trim()
+  // Unicode fractions
+  s = s.replace('½','0.5').replace('¼','0.25').replace('¾','0.75')
+       .replace('⅓','0.3333').replace('⅔','0.6667')
+  // Match  number  optionally followed by  / number  (fraction like 1/2)
+  const m = s.match(/^(\d+[\d,\.]*)(?:\s*\/\s*(\d+[\d,\.]*))?/)
+  if (!m) return null
+  const a = parseFloat(m[1].replace(',', '.'))
+  const b = m[2] ? parseFloat(m[2].replace(',', '.')) : null
+  const num = b ? a / b : a
+  if (isNaN(num)) return null
+  const rest = s.slice(m[0].length)   // everything after the number
+  return { num, rest }
+}
+
+function _fmtNum(n) {
+  if (n === Math.round(n)) return String(Math.round(n))
+  const r = Math.round(n * 10) / 10
+  if (r === Math.round(r)) return String(Math.round(r))
+  return r.toFixed(1)
+}
+
+function scaleQty(qty, factor) {
+  if (!qty || factor === 1) return qty
+  const p = _parseQtyNum(qty)
+  if (!p) return qty
+  const scaled = p.num * factor
+  return p.rest ? `${_fmtNum(scaled)}${p.rest}` : _fmtNum(scaled)
+}
+
+// Ingredient sections with quantities scaled to currentServings
+const scaledIngredientSections = computed(() => {
+  const f = scaleFactor.value
+  if (f === 1) return ingredientSections.value
+  return ingredientSections.value.map(section => ({
+    ...section,
+    items: (section.items || []).map(ing => ({
+      ...ing,
+      quantity: scaleQty(ing.quantity, f),
+    })),
+  }))
 })
 
 // methods: prefer methods_json, fall back to legacy steps_json as single unnamed method
@@ -237,10 +365,20 @@ const methods = computed(() => {
 })
 const totalSteps = computed(() => methods.value.reduce((sum, m) => sum + (m.steps?.length || 0), 0))
 
-function toggleIng(i) {
+function toggleIng(key) {
   const s = new Set(checkedIng.value)
-  s.has(i) ? s.delete(i) : s.add(i)
+  s.has(key) ? s.delete(key) : s.add(key)
   checkedIng.value = s
+}
+
+async function onFavorite() {
+  if (!recipe.value || favPending.value) return
+  favPending.value = true
+  try {
+    const isFav = await recipes.toggleFavorite(recipe.value.id)
+    recipe.value = { ...recipe.value, is_favorited: isFav }
+  } catch(e) {}
+  finally { favPending.value = false }
 }
 
 async function toggleVisibility(val) {
@@ -264,7 +402,14 @@ async function pushToList() {
   if (!recipe.value) return
   pushing.value = true
   try {
-    await recipes.pushToList(recipe.value.id)
+    // When scaled, send the already-computed quantities so the backend uses them directly
+    let items = null
+    if (scaleFactor.value !== 1) {
+      items = scaledIngredientSections.value.flatMap(s =>
+        (s.items || []).filter(i => i.name?.trim()).map(i => ({ name: i.name, quantity: i.quantity || '' }))
+      )
+    }
+    await recipes.pushToList(recipe.value.id, items)
     pushed.value = true
     setTimeout(() => pushed.value = false, 3000)
   } catch(e) {}
@@ -298,6 +443,19 @@ onMounted(async () => {
 .spacer { flex: 1; }
 .delete-btn { color: var(--danger) !important; border-color: var(--danger) !important; }
 .delete-btn:hover { background: var(--danger-bg) !important; }
+.fav-topbar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 12px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.fav-topbar-btn:hover { border-color: #ff6b8a; color: #ff6b8a; }
+.fav-topbar-btn.is-fav {
+  color: #ff6b8a;
+  border-color: rgba(255,107,138,0.4);
+  background: rgba(255,107,138,0.1);
+}
 
 .hero-img {
   position: relative; width: 100%; height: 280px;
@@ -336,12 +494,56 @@ onMounted(async () => {
 .stat-val { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin-top: 2px; }
 .stat-unit { font-family: var(--font-mono); font-size: 9px; font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase; color: var(--text-mute); margin-top: 1px; }
 
+/* Serving stepper (detail view) */
+.serving-stat-card { min-width: 0; }
+.serving-stepper {
+  display: flex; align-items: center; gap: 6px; margin-top: 4px;
+}
+.svc-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--accent); font-size: 20px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  line-height: 1; user-select: none;
+}
+.svc-btn:hover:not(:disabled) { background: var(--accent-dim); border-color: var(--accent); }
+.svc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.svc-num {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.4px;
+  min-width: 28px; text-align: center; color: var(--text);
+}
+.svc-note {
+  font-size: 9px; color: var(--text-mute); margin-top: 3px;
+  font-family: var(--font-mono); letter-spacing: 0.4px; text-transform: uppercase;
+}
+
+/* Scale banner */
+.scale-banner {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
+  padding: 7px 12px; border-radius: 9px;
+  background: rgba(199,155,255,0.1); border: 1px solid rgba(199,155,255,0.25);
+  color: var(--accent); font-size: 12px; font-weight: 500;
+}
+
 .body-grid { display: grid; grid-template-columns: 380px 1fr; gap: 28px; margin-top: 6px; }
 
 .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .col-title { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
 
 .ingredient-list { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.ing-section-header {
+  padding: 7px 14px 5px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.6px; text-transform: uppercase; color: var(--accent);
+  background: var(--surface-hi);
+  display: flex; align-items: center; gap: 6px;
+}
+.ing-section-header::before {
+  content: ''; display: inline-block; width: 3px; height: 12px;
+  border-radius: 2px; background: var(--accent); flex-shrink: 0;
+}
+.ing-section-divider { border-top: 1px solid var(--border); }
 .ingredient-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; }
 .ingredient-row.divide { border-top: 1px solid var(--border); }
 .ing-check {
@@ -352,7 +554,7 @@ onMounted(async () => {
 .ing-check.checked { background: var(--surface-hi); }
 .ing-name { flex: 1; font-size: 13.5px; color: var(--text); }
 .ing-name.ing-done { text-decoration: line-through; text-decoration-color: var(--text-mute); color: var(--text-dim); }
-.ing-qty { font-family: var(--font-mono); font-size: 12px; color: var(--text-mute); }
+.ing-qty { font-family: var(--font-mono); font-size: 12px; color: #ffffff; flex-shrink: 0; }
 
 .push-cta {
   margin-top: 14px; padding: 14px; border-radius: 14px;
@@ -399,7 +601,7 @@ onMounted(async () => {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-size: 12px; font-weight: 600;
 }
-.step-text { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.55; }
+.step-text { margin: 0; font-size: 13px; color: #ffffff; line-height: 1.55; }
 
 .loading-state { display: flex; align-items: center; justify-content: center; padding: 100px 20px; }
 

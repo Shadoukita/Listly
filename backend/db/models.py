@@ -42,7 +42,8 @@ def inv_dict(r) -> dict:
 def recipe_dict(r) -> dict:
     d = dict(r)
     v = d.get("is_public")
-    d["is_public"] = True if (v is None or v != 0) else False
+    d["is_public"]     = True if (v is None or v != 0) else False
+    d["is_favorited"]  = d.get("is_favorited", 0) != 0
     # calories is nullable INTEGER — keep None as None, coerce stored value to int
     cal = d.get("calories")
     d["calories"]      = int(cal) if cal is not None else None
