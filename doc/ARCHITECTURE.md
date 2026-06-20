@@ -23,7 +23,9 @@ Browser
 │    │                  ├── invites                   │
 │    │                  ├── modules                   │
 │    │                  ├── settings                  │
-│    │                  └── uploads                   │
+│    │                  ├── uploads                   │
+│    │                  ├── mealplanner               │
+│    │                  └── storage                   │
 │    │                       │                        │
 │    │                  SQLite (per-request conn)     │
 │    │                  /data/database.db             │
@@ -93,13 +95,15 @@ App.vue
            └── router-view  ← keyed by hh.current.id
                 ├── ShoppingView
                 ├── RecipesView / RecipeDetailView / RecipeCreateView
+                ├── MealPlannerView               ← daily / weekly / monthly calendar
+                ├── StorageView                   ← location sections + inventory
                 ├── ProfileView
                 ├── SettingsView
                 ├── AdminView
                 └── HouseholdSettingsView
 ```
 
-State is in Pinia stores (`auth`, `household`, `recipes`, `connection`). All API calls go through `stores/api.js` which attaches the JWT and handles offline detection.
+State is in Pinia stores (`auth`, `household`, `recipes`, `mealplan`, `storage`, `connection`). All API calls go through `stores/api.js` which attaches the JWT and handles offline detection.
 
 The inner `router-view` has `:key="hh.current?.id"` on it — this forces a full remount when you switch households so everything reloads cleanly without needing to watch the household ID in every view.
 

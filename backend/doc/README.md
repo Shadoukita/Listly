@@ -17,7 +17,9 @@ backend/
 │   ├── invites/
 │   ├── modules/
 │   ├── settings/
-│   └── uploads/
+│   ├── uploads/
+│   ├── mealplanner/      # meal plan CRUD, bulk delete, reorder, cross-day move
+│   └── storage/          # location CRUD (admin-gated) + item CRUD, cross-location move
 │
 ├── core/
 │   ├── config.py         # reads env vars

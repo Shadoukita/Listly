@@ -38,5 +38,8 @@
   "error.image_download_fail":  "Bild konnte nicht von der URL heruntergeladen werden",
 
   "error.name_required":        "Name ist erforderlich",
-  "error.bulk_ids_required":    "Keine IDs angegeben"
+  "error.bulk_ids_required":    "Keine IDs angegeben",
+  "error.date_required":        "Datum ist erforderlich",
+  "error.recipe_required":      "Ein Rezept muss ausgewählt werden",
+  "error.title_required":       "Titel ist erforderlich"
 }

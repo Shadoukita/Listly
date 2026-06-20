@@ -1,6 +1,6 @@
 # Listly
 
-Listly is a self-hosted app for managing household shopping lists and recipes. You can be in multiple households at once and switch between them — each one has its own list and cookbook.
+Listly is a self-hosted household management app — shared shopping lists, a recipe cookbook, a meal planner, and a storage inventory. You can be in multiple households at once and switch between them freely.
 
 ---
 
@@ -61,12 +61,14 @@ Full deployment notes are in `doc/DEPLOYMENT.md`.
 
 ## Modules
 
-Listly has a module system so you can turn features on or off. Right now there are two:
+Listly has a module system so you can turn features on or off. There are four modules:
 
 | Module | What it does |
 |---|---|
 | `shopping` | shared shopping list per household |
-| `recipes` | household recipe cookbook with URL import |
+| `recipes` | household recipe cookbook with URL import and favorites |
+| `mealplanner` | daily / weekly / monthly meal calendar, drag-and-drop between days |
+| `storage` | stock inventory across named locations, drag-and-drop between locations |
 
 Admins toggle them globally; users can also disable ones they don't personally use.
 

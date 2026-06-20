@@ -41,7 +41,7 @@
         <p class="section-hint">{{ $t('admin.hostedModulesDesc') }}</p>
         <ToggleRow
           v-for="mod in MODULES" :key="mod.id"
-          :icon="I[mod.id === 'shopping' ? 'cart' : 'chef']"
+          :icon="I[mod.icon]"
           :label="$t('modules.' + mod.id)"
           :on="auth.globalModules[mod.id]"
           @change="toggleGlobalModule(mod.id, $event)"

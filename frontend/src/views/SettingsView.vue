@@ -30,7 +30,7 @@
         <template v-for="mod in MODULES" :key="mod.id">
           <ToggleRow
             v-if="auth.globalModules[mod.id]"
-            :icon="I[mod.id === 'shopping' ? 'cart' : 'chef']"
+            :icon="I[mod.icon]"
             :label="$t('modules.' + mod.id)"
             :on="auth.userModules[mod.id]"
             @change="toggleModule(mod.id, $event)"

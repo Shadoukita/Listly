@@ -14,6 +14,8 @@ const ProfileView        = () => import('./views/ProfileView.vue')
 const SettingsView       = () => import('./views/SettingsView.vue')
 const AdminView          = () => import('./views/AdminView.vue')
 const HouseholdSettingsView = () => import('./views/HouseholdSettingsView.vue')
+const MealPlannerView       = () => import('./views/MealPlannerView.vue')
+const StorageView           = () => import('./views/StorageView.vue')
 
 const routes = [
   { path: '/setup',  component: SetupView },
@@ -30,6 +32,8 @@ const routes = [
       { path: 'recipes/new',             component: RecipeCreateView },
       { path: 'recipes/:id/edit',        component: RecipeCreateView },
       { path: 'recipes/:id',             component: RecipeDetailView },
+      { path: 'mealplanner',              component: MealPlannerView },
+      { path: 'storage',                 component: StorageView },
       { path: 'profile',                 component: ProfileView },
       { path: 'settings',                component: SettingsView },
       { path: 'admin',                   component: AdminView, meta: { requiresAdmin: true } },

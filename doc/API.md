@@ -156,6 +156,101 @@ Returns `{ "added": 6 }`.
 
 ---
 
+## Meal Planner
+
+### `GET /api/households/<hid>/meal-plans`
+Fetch plans for a date range. Query params:
+- `from` — start date `YYYY-MM-DD` (required)
+- `to` — end date `YYYY-MM-DD` (required)
+- `scope` — `mine` (default) or `household` (all members' plans)
+
+```json
+[
+  {
+    "id": 1, "household_id": 1, "user_id": 2, "user_name": "alice",
+    "plan_date": "2026-06-20", "kind": "recipe",
+    "recipe_id": 5, "recipe_name": "Pasta", "recipe_description": "...",
+    "title": null, "description": null, "notes": "double the garlic",
+    "sort_order": 0, "created_at": "2026-06-18T10:00:00"
+  }
+]
+```
+
+### `POST /api/households/<hid>/meal-plans`
+Create a plan.
+
+```json
+{
+  "plan_date": "2026-06-20",
+  "kind": "recipe",
+  "recipe_id": 5,
+  "notes": "optional note"
+}
+```
+For `kind: "manual"` use `title` and `description` instead of `recipe_id`.
+
+### `PATCH /api/meal-plans/<id>`
+Partial update. Any field from the create payload is accepted, including `plan_date` (used when dragging a plan to a different day).
+
+### `DELETE /api/meal-plans/<id>`
+Delete a single plan.
+
+### `DELETE /api/meal-plans/bulk`
+Delete multiple plans. Body: `{ "ids": [1, 2, 3] }` → `{ "deleted": [1, 2, 3] }`.
+
+### `PATCH /api/households/<hid>/meal-plans/reorder`
+Reorder plans within a single day. Body: `{ "plan_date": "2026-06-20", "ids": [3, 1, 2] }` — the order of IDs becomes the new `sort_order`.
+
+---
+
+## Storage
+
+### `GET /api/households/<hid>/storage/locations`
+All storage locations for the household.
+
+```json
+[{ "id": 1, "household_id": 1, "name": "Fridge", "icon": "fridge", "tone": "#9bd9ff" }]
+```
+
+### `POST /api/households/<hid>/storage/locations`
+Create a location. Requires household `admin` or `owner`.
+Body: `{ "name": "Fridge", "icon": "fridge", "tone": "#9bd9ff" }`
+
+### `PATCH /api/storage/locations/<id>`
+Update a location's name, icon, or tone. Admin/owner only.
+
+### `DELETE /api/storage/locations/<id>`
+Delete a location. Admin/owner only. Cascade-deletes all items in it.
+
+### `GET /api/households/<hid>/storage/items`
+All items across all locations for the household.
+
+```json
+[
+  {
+    "id": 1, "household_id": 1, "location_id": 2,
+    "name": "Milk", "quantity": 2, "unit": "L",
+    "low_threshold": 1, "is_low": false,
+    "added_by": 3, "added_by_name": "alice"
+  }
+]
+```
+
+### `POST /api/households/<hid>/storage/items`
+Add an item. `name` and `location_id` are required.
+
+```json
+{ "name": "Milk", "location_id": 2, "quantity": 2, "unit": "L", "low_threshold": 1 }
+```
+
+### `PATCH /api/storage/items/<id>`
+Update an item. Accepts any field from creation, including `location_id` (used when dragging an item to a different location section).
+
+### `DELETE /api/storage/items/<id>`
+Delete an item.
+
+---
+
 ## Users
 
 ### `GET /api/me`

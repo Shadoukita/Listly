@@ -148,6 +148,55 @@ Singleton row (`id` must equal 1).
 
 ---
 
+### `meal_plans`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | INTEGER PK | |
+| `household_id` | INTEGER FK→households NOT NULL | |
+| `user_id` | INTEGER FK→users NULL | NULLed when user is deleted |
+| `plan_date` | TEXT NOT NULL | `YYYY-MM-DD` |
+| `kind` | TEXT NOT NULL | `'recipe'` or `'manual'` |
+| `recipe_id` | INTEGER FK→recipes NULL | set when `kind = 'recipe'` |
+| `title` | TEXT | set when `kind = 'manual'` |
+| `description` | TEXT | set when `kind = 'manual'` |
+| `notes` | TEXT | optional free-text note on any plan |
+| `sort_order` | INTEGER DEFAULT `0` | controls display order within a day |
+| `created_at` | DATETIME | |
+
+---
+
+### `storage_locations`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | INTEGER PK | |
+| `household_id` | INTEGER FK→households NOT NULL | |
+| `name` | TEXT NOT NULL | |
+| `icon` | TEXT DEFAULT `'shelf'` | one of: `shelf`, `fridge`, `freezer`, `pantry`, `cooler`, `basket`, `box` |
+| `tone` | TEXT DEFAULT `'#9bd9ff'` | hex colour used for the location chip and status dot |
+| `created_at` | DATETIME | |
+
+---
+
+### `storage_items`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | INTEGER PK | |
+| `household_id` | INTEGER FK→households NOT NULL | |
+| `location_id` | INTEGER FK→storage_locations NOT NULL | updated when item is dragged to another location |
+| `name` | TEXT NOT NULL | |
+| `quantity` | REAL DEFAULT `0` | |
+| `unit` | TEXT DEFAULT `''` | e.g. `kg`, `pcs`, `L` |
+| `low_threshold` | REAL DEFAULT `0` | alert when `quantity ≤ threshold`; `0` disables the alert |
+| `is_low` | BOOLEAN DEFAULT `0` | set by the backend: true when `low_threshold > 0 AND quantity ≤ low_threshold` |
+| `added_by` | INTEGER FK→users NULL | NULLed when user is deleted |
+| `created_at` | DATETIME | |
+| `updated_at` | DATETIME | |
+
+---
+
 ### `user_modules` / `global_modules`
 
 `user_modules`: per-user on/off preference per module.
@@ -194,6 +243,9 @@ Migrations run automatically on startup via `init_db()` in `db/migrations.py`. E
 | `002_add_recipe_calories` | adds `calories INTEGER` to recipes |
 | `003_add_recipe_calories_unit` | adds `calories_unit TEXT DEFAULT 'serving'` |
 | `004_rename_hh_admin_to_owner` | renames role value `'admin'` → `'owner'` in household_members |
+| `005_add_meal_plans` | creates `meal_plans` table |
+| `006_add_storage_locations` | creates `storage_locations` table |
+| `007_add_storage_items` | creates `storage_items` table |
 
 **To add a migration**, append to the list in `db/migrations.py` — never edit or reorder existing ones:
 
@@ -216,3 +268,6 @@ Always use these before passing data to `jsonify()`:
 | `item_dict(row)` | shopping_items | `checked` |
 | `inv_dict(row)` | invite_links | `used` |
 | `recipe_dict(row)` | recipes | `is_public` |
+| `meal_plan_dict(row)` | meal_plans | _(no booleans; joins recipe name/description and user name)_ |
+| `storage_location_dict(row)` | storage_locations | _(no booleans)_ |
+| `storage_item_dict(row)` | storage_items | `is_low` |

@@ -24,6 +24,12 @@
 | 18 | Household switch re-mounts active view (`:key` on `<router-view>`) | ✅ Done |
 | 19 | Old `frontend/` removed, `frontend-new/` renamed to `frontend/` | ✅ Done |
 | 20 | Mobile sidebar fix — inner panel gets `z-index: 1` so the overlay doesn't eat clicks | ✅ Done |
+| 21 | Meal Planner module — daily/weekly/monthly calendar, recipe + manual plans, drag-and-drop reorder, multi-select delete, mine/household scope | ✅ Done |
+| 22 | Storage module — location management with icons + colours, stock tracking, low-stock threshold + banner, push to shopping list | ✅ Done |
+| 23 | MODULES extended with `icon` field — Sidebar, Settings and Admin icon lookups are now driven by module data instead of hardcoded conditionals | ✅ Done |
+| 24 | PlanCard component — compact + full modes, tone rail from recipe_id, long-press multi-select, drag handles | ✅ Done |
+| 25 | Meal Planner UX pass — cross-day drag & drop (move plans between days), delete button on detail modal, click anywhere on a day column to select it, today marker reduced to number-only highlight, drag-over dashed outline on target day | ✅ Done |
+| 26 | Storage drag & drop — drag items between location sections, drag-over dashed accent outline on the target location, grab cursor on draggable rows | ✅ Done |
 
 ---
 
@@ -44,6 +50,11 @@
 | 11 | User delete FK fix — NULL-out all FK references before deleting the row | ✅ Done |
 | 12 | "Deleted User" attribution in shopping and recipe queries | ✅ Done |
 | 13 | Household remove-member only removes the membership row, content stays | ✅ Done |
+| 14 | Meal planner API blueprint — list, create, update, delete, bulk-delete, reorder endpoints | ✅ Done |
+| 15 | Storage API blueprint — location CRUD (admin-gated) + item CRUD (member+) | ✅ Done |
+| 16 | `meal_plans`, `storage_locations`, `storage_items` tables added to schema.sql | ✅ Done |
+| 17 | `meal_plan_dict`, `storage_location_dict`, `storage_item_dict` helpers added to db/models.py | ✅ Done |
+| 18 | `is_low` fix — only flags items low when `low_threshold > 0`, so default items don't show false alerts | ✅ Done |
 
 ---
 

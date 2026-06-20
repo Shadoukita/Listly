@@ -17,7 +17,7 @@
             :class="{ active: route.path.startsWith('/' + mod.id) }"
             @click="$emit('close')"
           >
-            <AppIcon :d="I[mod.id === 'shopping' ? 'cart' : 'chef']" :size="18" />
+            <AppIcon :d="I[mod.icon]" :size="18" />
             <span class="nav-item-label">{{ $t('modules.' + mod.id) }}</span>
           </router-link>
         </template>

@@ -39,6 +39,24 @@ def inv_dict(r) -> dict:
     return d
 
 
+def meal_plan_dict(r) -> dict:
+    d = dict(r)
+    d["recipe_id"] = d.get("recipe_id")   # nullable INTEGER, keep None
+    return d
+
+
+def storage_location_dict(r) -> dict:
+    return dict(r)
+
+
+def storage_item_dict(r) -> dict:
+    d = dict(r)
+    d["quantity"]      = int(d.get("quantity") or 0)
+    d["low_threshold"] = int(d.get("low_threshold") or 0)
+    d["is_low"]        = d["low_threshold"] > 0 and d["quantity"] <= d["low_threshold"]
+    return d
+
+
 def recipe_dict(r) -> dict:
     d = dict(r)
     v = d.get("is_public")

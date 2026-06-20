@@ -3,8 +3,10 @@ import { ref, computed } from 'vue'
 import { api } from './api'
 
 export const MODULES = [
-  { id: 'shopping', label: 'Shopping list' },
-  { id: 'recipes',  label: 'Recipes' },
+  { id: 'shopping',    label: 'Shopping list', icon: 'cart'     },
+  { id: 'recipes',     label: 'Recipes',       icon: 'chef'     },
+  { id: 'mealplanner', label: 'Meal planner',  icon: 'calendar' },
+  { id: 'storage',     label: 'Storage',       icon: 'box'      },
 ]
 
 function defaultModuleData() {

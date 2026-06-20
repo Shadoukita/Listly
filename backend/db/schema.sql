@@ -113,3 +113,51 @@ CREATE TABLE IF NOT EXISTS recipe_favorites (
     PRIMARY KEY (user_id, recipe_id)
 );
 CREATE INDEX IF NOT EXISTS idx_favorites_user ON recipe_favorites(user_id);
+
+-- ── Meal planner ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS meal_plans (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    household_id  INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+    user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    plan_date     TEXT NOT NULL,
+    kind          TEXT NOT NULL DEFAULT 'manual',
+    recipe_id     INTEGER REFERENCES recipes(id) ON DELETE SET NULL,
+    title         TEXT,
+    description   TEXT,
+    notes         TEXT,
+    sort_order    INTEGER DEFAULT 0,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_mealplans_hh_date ON meal_plans(household_id, plan_date);
+CREATE INDEX IF NOT EXISTS idx_mealplans_user    ON meal_plans(user_id);
+
+-- ── Storage ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS storage_locations (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    household_id  INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    icon          TEXT DEFAULT 'shelf',
+    tone          TEXT DEFAULT '#9bd9ff',
+    sort_order    INTEGER DEFAULT 0,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_storage_loc_hh ON storage_locations(household_id);
+
+CREATE TABLE IF NOT EXISTS storage_items (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    household_id  INTEGER NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+    location_id   INTEGER NOT NULL REFERENCES storage_locations(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    quantity      INTEGER NOT NULL DEFAULT 0,
+    unit          TEXT DEFAULT '',
+    low_threshold INTEGER DEFAULT 0,
+    added_by      INTEGER REFERENCES users(id),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_storage_items_loc ON storage_items(location_id);
+CREATE INDEX IF NOT EXISTS idx_storage_items_hh  ON storage_items(household_id);
+
+INSERT OR IGNORE INTO global_modules (module, enabled) VALUES ('mealplanner', TRUE);
+INSERT OR IGNORE INTO global_modules (module, enabled) VALUES ('storage', TRUE);
