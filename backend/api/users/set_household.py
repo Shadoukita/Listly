@@ -10,7 +10,7 @@ from db.session import get_db
 @bp.put("/me/household")
 @token_required
 def set_household():
-    hid = request.get_json().get("household_id")
+    hid = (request.get_json(silent=True) or {}).get("household_id")
     if hid and not has_access(hid):
         return jsonify({"error": t("error.no_access")}), 403
     db = get_db()

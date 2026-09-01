@@ -19,7 +19,7 @@ def register_with_invite(token):
     if not inv:
         return jsonify({"error": t("error.invite_invalid")}), 404
 
-    d        = request.get_json()
+    d        = (request.get_json(silent=True) or {})
     username = d.get("username", "").strip()
     password = d.get("password", "")
 

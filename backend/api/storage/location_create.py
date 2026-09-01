@@ -14,7 +14,7 @@ def create_storage_location(hid):
     if not is_hh_admin(hid):
         return jsonify({"error": t("error.household_admins_only")}), 403
 
-    d    = request.get_json() or {}
+    d    = request.get_json(silent=True) or {}
     name = (d.get("name") or "").strip()
     if not name:
         return jsonify({"error": t("error.name_required")}), 400

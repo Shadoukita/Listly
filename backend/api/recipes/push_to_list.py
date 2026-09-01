@@ -21,9 +21,16 @@ def push_to_list(rid):
     if not in_hh and not row["is_public"]:
         return jsonify({"error": t("error.no_access")}), 403
 
-    target_hh = g.current_user.get("last_household_id") or row["household_id"]
-    if not has_access(target_hh):
-        target_hh = row["household_id"]
+    # Resolve where the items go. It must be a household the caller belongs to.
+    # The previous fallback re-assigned the recipe's household after rejecting
+    # it, so a user with no last_household_id wrote into a household they were
+    # not a member of — and `items` below is caller-supplied, making it
+    # arbitrary content injection into someone else's list.
+    target_hh = g.current_user.get("last_household_id")
+    if not target_hh or not has_access(target_hh):
+        target_hh = row["household_id"] if in_hh else None
+    if not target_hh:
+        return jsonify({"error": t("error.no_target_household")}), 400
 
     body = request.get_json(silent=True) or {}
 

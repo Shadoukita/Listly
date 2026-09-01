@@ -11,7 +11,7 @@ from db.session import get_db
 @token_required
 @admin_required
 def update_global_modules():
-    d  = request.get_json()
+    d  = (request.get_json(silent=True) or {})
     db = get_db()
     for m in MODULES:
         if m in d:

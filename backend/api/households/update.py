@@ -14,7 +14,7 @@ def update_household(hid):
     if not is_hh_admin(hid):
         return jsonify({"error": t("error.household_admins_only")}), 403
 
-    d  = request.get_json()
+    d  = (request.get_json(silent=True) or {})
     db = get_db()
 
     if name := d.get("name", "").strip():

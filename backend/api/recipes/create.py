@@ -17,7 +17,7 @@ def create_recipe(hid):
     if my_role == "restricted":
         return jsonify({"error": t("error.no_access")}), 403
 
-    d    = request.get_json()
+    d    = (request.get_json(silent=True) or {})
     name = d.get("name", "").strip()
     if not name:
         return jsonify({"error": t("error.name_required")}), 400

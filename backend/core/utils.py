@@ -41,3 +41,32 @@ def is_hh_admin(household_id: int) -> bool:
 def is_hh_owner(household_id: int) -> bool:
     """True if the current user is the owner of the household."""
     return get_member_role(household_id) == "owner"
+
+
+def can_view_recipe(recipe_id) -> bool:
+    """
+    True if the current user may see this recipe.
+
+    Mirrors the rule enforced by GET /api/recipes/<id>: public recipes are
+    visible to everyone, private ones only to members of their household.
+    Anything that stores a caller-supplied recipe_id must check this, or the
+    recipe's name and description leak back out through a JOIN.
+    """
+    row = get_db().execute(
+        "SELECT household_id, is_public FROM recipes WHERE id = ?", (recipe_id,)
+    ).fetchone()
+    if not row:
+        return False
+    # NULL is_public counts as public — same coercion as db.models.recipe_dict
+    if row["is_public"] is None or row["is_public"] != 0:
+        return True
+    return has_access(row["household_id"])
+
+
+def location_in_household(location_id, household_id) -> bool:
+    """True if this storage location belongs to the given household."""
+    row = get_db().execute(
+        "SELECT 1 FROM storage_locations WHERE id = ? AND household_id = ?",
+        (location_id, household_id),
+    ).fetchone()
+    return row is not None

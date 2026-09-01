@@ -3,7 +3,7 @@ from flask import jsonify, request
 from api.storage import bp
 from core.security import token_required
 from lang.lang_config import t
-from core.utils import has_access
+from core.utils import has_access, location_in_household
 from db.session import get_db
 from db.models import storage_item_dict
 
@@ -21,12 +21,19 @@ def update_storage_item(iid):
     if not has_access(row["household_id"]):
         return jsonify({"error": t("error.no_access")}), 403
 
-    d       = request.get_json() or {}
+    d       = request.get_json(silent=True) or {}
     updates = {f: d[f] for f in _ALLOWED_FIELDS if f in d}
     # Coerce numeric fields
     for field in ("quantity", "low_threshold", "location_id"):
         if field in updates:
             updates[field] = int(updates[field] or 0)
+
+    # A location from another household would let that household's owner
+    # delete this item via ON DELETE CASCADE.
+    if "location_id" in updates and not location_in_household(
+        updates["location_id"], row["household_id"]
+    ):
+        return jsonify({"error": t("error.not_found")}), 400
 
     if not updates:
         return jsonify(storage_item_dict(row))

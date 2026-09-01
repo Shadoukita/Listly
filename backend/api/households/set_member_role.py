@@ -17,7 +17,7 @@ def set_member_role(hid, uid):
     if uid == g.current_user["id"]:
         return jsonify({"error": t("error.cannot_change_own_role")}), 400
 
-    role = (request.get_json() or {}).get("role")
+    role = (request.get_json(silent=True) or {}).get("role")
     if role not in _VALID_ROLES:
         return jsonify({"error": t("error.invalid_role")}), 400
 

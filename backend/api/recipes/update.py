@@ -29,7 +29,7 @@ def update_recipe(rid):
         if not my_role or ROLE_RANK.get(my_role, 0) < ROLE_RANK["member"]:
             return jsonify({"error": t("error.no_access")}), 403
 
-    d       = request.get_json()
+    d       = (request.get_json(silent=True) or {})
     updates = {f: d[f] for f in _ALLOWED_FIELDS if f in d}
     if "is_public" in updates:
         updates["is_public"] = 1 if updates["is_public"] else 0

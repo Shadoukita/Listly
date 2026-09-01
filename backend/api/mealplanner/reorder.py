@@ -13,7 +13,7 @@ def reorder_meal_plans(hid):
     if not has_access(hid):
         return jsonify({"error": t("error.no_access")}), 403
 
-    body      = request.get_json() or {}
+    body      = request.get_json(silent=True) or {}
     plan_date = body.get("plan_date", "")
     ids       = body.get("ids", [])
     if not plan_date or not ids:

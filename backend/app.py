@@ -47,6 +47,11 @@ _CSP = "; ".join([
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = SECRET_KEY
+    # Hard ceiling on request bodies. The upload route caps what it *reads* at
+    # 10 MB, but Werkzeug parses the whole multipart body first, so without
+    # this an authenticated user could push arbitrarily large bodies at memory
+    # and disk. Slightly above the upload limit to leave room for MIME framing.
+    app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 
     # Only trust X-Forwarded-* when explicitly told how many proxies sit in
     # front — otherwise a client could spoof its address past the login throttle.

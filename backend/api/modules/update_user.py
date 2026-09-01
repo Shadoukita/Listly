@@ -10,7 +10,7 @@ from db.session import get_db
 @bp.put("/me/modules")
 @token_required
 def update_user_modules():
-    d  = request.get_json()
+    d  = (request.get_json(silent=True) or {})
     db = get_db()
     for m in MODULES:
         if m in d:
