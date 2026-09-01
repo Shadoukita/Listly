@@ -21,16 +21,22 @@ COPY backend/ ./
 # Copy built frontend to where Flask looks for it (DIST_DIR env var)
 COPY --from=frontend-build /build/dist /frontend/dist
 
-# Run as an unprivileged user — the app writes files it fetches on a user's
-# behalf, and none of that should ever land as root.
+# Default unprivileged identity. The container still STARTS as root so the
+# entrypoint can fix ownership of a bind-mounted /data before dropping to this
+# user (or to PUID/PGID).
+#
+# Declaring `USER listly` here instead would break every bind mount: a
+# Dockerfile chown only affects the image layer, while a host mount keeps the
+# host's ownership. On Unraid /mnt/user/appdata is nobody:users (99:100), which
+# a fixed uid cannot write to — SQLite then fails with
+# "attempt to write a readonly database".
 RUN useradd --system --create-home --uid 10001 listly
 
-# /data is mounted as a Docker volume — database and uploads live here.
-# A *fresh* named volume inherits this ownership; a volume created by an older
-# root-running image keeps its old ownership, so on upgrade run once:
-#   docker run --rm -v listly_data:/data alpine chown -R 10001:10001 /data
 RUN mkdir -p /data/assets/recipes /data/assets/users \
     && chown -R listly:listly /data /app
+
+COPY docker/entrypoint.py /usr/local/bin/docker-entrypoint.py
+RUN chmod +x /usr/local/bin/docker-entrypoint.py
 
 ENV DATABASE=/data/database.db
 ENV DIST_DIR=/frontend/dist
@@ -41,9 +47,15 @@ ENV PORT=5000
 # invalidating every session. Passing SECRET_KEY explicitly still takes priority.
 ENV ENV_FILE=/data/.env
 
-USER listly
+# Run the app as a specific account. Unraid exposes these in its template.
+# Left unset, the entrypoint adopts whoever already owns /data, so an existing
+# bind mount keeps working with no configuration.
+ENV PUID=""
+ENV PGID=""
 
 EXPOSE ${PORT}
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.py"]
 
 # 2 workers is fine for a home server; raise if you need more concurrency
 CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 2 --timeout 60 --access-logfile - main:app"]
