@@ -8,20 +8,57 @@ WSGI:         gunicorn "main:app"
 """
 import os
 
-import os
-
 from flask import Flask, abort, send_from_directory
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-from core.config import ASSETS_DIR, DIST_DIR, SECRET_KEY
+from core.config import (
+    ASSETS_DIR,
+    CORS_ORIGINS,
+    DIST_DIR,
+    ENABLE_HSTS,
+    SECRET_KEY,
+    TRUSTED_PROXY_COUNT,
+)
 from db.session import close_db
+
+# Content-Security-Policy.
+#   script-src has no 'unsafe-inline' / 'unsafe-eval' — the Vite build emits no
+#   inline scripts (modulePreload.polyfill is disabled in vite.config.js).
+#   style-src needs 'unsafe-inline' for Vue's :style bindings.
+#   img-src needs blob: for local upload previews and https: for recipe images
+#   imported from external sites.
+_CSP = "; ".join([
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self'",
+    "manifest-src 'self'",
+    "worker-src 'self'",
+])
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = SECRET_KEY
 
-    CORS(app)
+    # Only trust X-Forwarded-* when explicitly told how many proxies sit in
+    # front — otherwise a client could spoof its address past the login throttle.
+    if TRUSTED_PROXY_COUNT > 0:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=TRUSTED_PROXY_COUNT, x_proto=TRUSTED_PROXY_COUNT
+        )
+
+    # Same-origin by default; opt in via CORS_ORIGINS only if you host the
+    # frontend separately. A wildcard would let any site call the API.
+    if CORS_ORIGINS:
+        CORS(app, origins=CORS_ORIGINS, supports_credentials=False)
 
     # Register all API blueprints
     from api import register_blueprints
@@ -29,6 +66,22 @@ def create_app() -> Flask:
 
     # Close the SQLite connection at the end of every request context
     app.teardown_appcontext(close_db)
+
+    @app.after_request
+    def _security_headers(resp):
+        resp.headers.setdefault("Content-Security-Policy", _CSP)
+        # Stops the browser sniffing an uploaded file into something executable
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "no-referrer")
+        resp.headers.setdefault(
+            "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
+        )
+        if ENABLE_HSTS:
+            resp.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        return resp
 
     # ── Static routes ─────────────────────────────────────────────────────────
 

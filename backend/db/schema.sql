@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     profile_image TEXT,
     darkmode BOOLEAN DEFAULT TRUE,
     last_household_id INTEGER,
+    -- Bumped to revoke every JWT issued for this user (see core/security.py)
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -51,6 +53,7 @@ CREATE TABLE IF NOT EXISTS invite_links (
     created_by INTEGER REFERENCES users(id),
     used_by INTEGER REFERENCES users(id),
     used BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -161,3 +164,13 @@ CREATE INDEX IF NOT EXISTS idx_storage_items_hh  ON storage_items(household_id);
 
 INSERT OR IGNORE INTO global_modules (module, enabled) VALUES ('mealplanner', TRUE);
 INSERT OR IGNORE INTO global_modules (module, enabled) VALUES ('storage', TRUE);
+
+-- ── Login throttling ─────────────────────────────────────────────────
+-- Failed-login counters, in SQLite rather than process memory so they are
+-- shared across Gunicorn workers. See core/ratelimit.py.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    key          TEXT PRIMARY KEY,
+    fails        INTEGER NOT NULL DEFAULT 0,
+    window_start REAL    NOT NULL DEFAULT 0,
+    locked_until REAL    NOT NULL DEFAULT 0
+);

@@ -1,6 +1,6 @@
 import json
 
-from flask import g, jsonify
+from flask import g, jsonify, request
 
 from api.recipes import bp
 from core.security import token_required

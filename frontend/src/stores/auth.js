@@ -84,9 +84,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function updateProfile(data) {
     const updated = await api('/me/profile', 'PUT', data)
-    user.value = updated
-    localStorage.setItem('user', JSON.stringify(updated))
-    return updated
+    // A password change revokes every token for this account, including ours.
+    // The backend returns a replacement so this session stays signed in while
+    // other sessions get logged out.
+    const { token: rotated, ...profile } = updated
+    if (rotated) {
+      token.value = rotated
+      localStorage.setItem('token', rotated)
+    }
+    user.value = profile
+    localStorage.setItem('user', JSON.stringify(profile))
+    return profile
   }
 
   return {

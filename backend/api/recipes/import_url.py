@@ -1,8 +1,9 @@
 import re
-import requests
+
 from flask import jsonify, request
 
 from api.recipes import bp
+from core.net import UnsafeURLError, fetch_external
 from core.security import token_required
 from lang.lang_config import t
 
@@ -17,6 +18,9 @@ except Exception as _e:
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; Listly-recipe-importer/1.0)"
 }
+
+# Recipe pages are HTML; anything larger than this is not a recipe.
+_MAX_BYTES = 4 * 1024 * 1024
 
 # Matches a leading quantity (number + optional unit) at the start of an
 # ingredient string.
@@ -100,10 +104,21 @@ def import_recipe():
     if not url:
         return jsonify({"error": t("error.url_required")}), 400
 
+    # Never fetch a user-supplied URL directly — see core/net.py. This blocks
+    # file://, loopback, private ranges and cloud metadata, and re-validates
+    # every redirect hop.
     try:
-        resp = requests.get(url, headers=_HEADERS, timeout=15)
-        resp.raise_for_status()
-        s = _SCRAPE_HTML(resp.text, org_url=url, wild_mode=True)
+        body, _ = fetch_external(url, max_bytes=_MAX_BYTES, headers=_HEADERS)
+    except UnsafeURLError:
+        return jsonify({"error": t("error.url_not_allowed")}), 400
+    except Exception:
+        # Deliberately generic: the raw exception leaks internal hostnames,
+        # ports and filesystem paths back to the caller.
+        return jsonify({"error": t("error.url_fetch_failed")}), 400
+
+    try:
+        html = body.decode("utf-8", errors="replace")
+        s = _SCRAPE_HTML(html, org_url=url, wild_mode=True)
 
         prep = _safe(s.prep_time)
         cook = _safe(s.cook_time)
@@ -126,7 +141,5 @@ def import_recipe():
             "tags":                [],
             "source_url":          url,
         })
-    except requests.RequestException as e:
-        return jsonify({"error": f"Could not fetch URL: {e}"}), 400
-    except Exception as e:
-        return jsonify({"error": f"Could not scrape: {e}"}), 400
+    except Exception:
+        return jsonify({"error": t("error.url_scrape_failed")}), 400

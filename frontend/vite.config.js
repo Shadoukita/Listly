@@ -3,6 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    // Vite's modulepreload polyfill is injected as an INLINE <script>, which
+    // would force 'unsafe-inline' into the Content-Security-Policy set in
+    // backend/app.py. It is only a preload optimisation, so drop it and keep
+    // script-src strict.
+    modulePreload: { polyfill: false },
+  },
   plugins: [
     vue(),
     VitePWA({
