@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Container scripts must keep LF endings — a CRLF shebang makes the
+# kernel look for "python3" and the entrypoint dies with exit 127.
+docker/entrypoint.py text eol=lf
+*.sh text eol=lf
