@@ -10,11 +10,20 @@ services:
     volumes:
       - listly_data:/data            # SQLite database persists across updates
     environment:
-      - SECRET_KEY=${SECRET_KEY:-change-me-to-a-random-secret}
+      # No default on purpose: booting on a published placeholder key would let
+      # anyone forge a session for any account. Compose refuses to start until
+      # SECRET_KEY is set in docker/.env.
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is not set — copy docker/.env.example to docker/.env and generate one with: python -c "import secrets; print(secrets.token_hex(32))"}
       - DATABASE=/data/database.db
       - DIST_DIR=/frontend/dist
       - ASSETS_DIR=/data/assets
       - PORT=${PORT:-5000}
+      # Set to the number of reverse proxies in front of Listly (0 = none).
+      # Only raise this if you actually run behind nginx/Traefik — otherwise a
+      # client can spoof its address via X-Forwarded-For and dodge the login throttle.
+      - TRUSTED_PROXY_COUNT=${TRUSTED_PROXY_COUNT:-0}
+      # Set to 1 only when Listly is served over HTTPS.
+      - ENABLE_HSTS=${ENABLE_HSTS:-0}
 
 volumes:
   listly_data:

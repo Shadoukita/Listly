@@ -37,6 +37,6 @@ def setup():
         )
         db.commit()
         user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-        return jsonify({"token": make_token(user["id"], True), "user": udict(user)}), 201
+        return jsonify({"token": make_token(user, True), "user": udict(user)}), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": t("error.username_taken")}), 409

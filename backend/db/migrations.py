@@ -49,6 +49,8 @@ def init_db():
         ("002_add_recipe_calories",      "ALTER TABLE recipes ADD COLUMN calories INTEGER"),
         ("003_add_recipe_calories_unit", "ALTER TABLE recipes ADD COLUMN calories_unit TEXT DEFAULT 'serving'"),
         ("004_rename_hh_admin_to_owner", "UPDATE household_members SET role = 'owner' WHERE role = 'admin'"),
+        ("005_add_user_token_version",   "ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0"),
+        ("006_add_invite_expires_at",    "ALTER TABLE invite_links ADD COLUMN expires_at TIMESTAMP"),
     ]
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -64,8 +66,8 @@ def init_db():
                 db.execute(sql)
             db.execute("INSERT INTO _migrations (name) VALUES (?)", (name,))
             db.commit()
-            print(f"  ✅ Migration applied: {name}")
+            print(f"  [migration] applied: {name}")
         except Exception as e:
-            print(f"  ⚠️  Migration skipped ({name}): {e}")
+            print(f"  [migration] skipped ({name}): {e}")
 
     db.close()

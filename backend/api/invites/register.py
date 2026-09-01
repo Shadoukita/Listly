@@ -4,6 +4,7 @@ from flask import jsonify, request
 
 from api.invites import bp
 from core.security import hash_pw, make_token
+from core.invites import VALID_INVITE_SQL
 from lang.lang_config import t
 from db.session import get_db
 from db.models import udict
@@ -13,7 +14,7 @@ from db.models import udict
 def register_with_invite(token):
     db  = get_db()
     inv = db.execute(
-        "SELECT * FROM invite_links WHERE token = ? AND used = 0", (token,)
+        f"SELECT * FROM invite_links WHERE token = ? AND {VALID_INVITE_SQL}", (token,)
     ).fetchone()
     if not inv:
         return jsonify({"error": t("error.invite_invalid")}), 404
@@ -38,6 +39,6 @@ def register_with_invite(token):
             (user["id"], inv["id"]),
         )
         db.commit()
-        return jsonify({"token": make_token(user["id"], True), "user": udict(user)}), 201
+        return jsonify({"token": make_token(user, True), "user": udict(user)}), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": t("error.username_taken")}), 409
