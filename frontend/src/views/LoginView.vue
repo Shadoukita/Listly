@@ -26,7 +26,7 @@
               <AppIcon v-if="remember" :d="I.check" :size="11" :sw="3.5" />
             </div>
             <input type="checkbox" v-model="remember" hidden />
-            {{ $t('auth.stayLoggedIn') }} (365 days)
+            {{ $t('auth.stayLoggedIn') }} (30 days)
           </label>
         </div>
         <AppButton :full="true" :disabled="loading" @click="login">{{ $t('auth.signIn') }}</AppButton>
