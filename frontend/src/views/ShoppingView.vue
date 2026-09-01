@@ -10,7 +10,7 @@
             <Pill v-if="hh.current.role === 'owner'" tone="amber">{{ $t('household.roles.owner') }}</Pill>
             <Pill v-else-if="hh.current.role === 'admin'" tone="accent">{{ $t('household.roles.admin') }}</Pill>
           </div>
-          <div class="hh-meta">{{ hh.current.member_count }} members</div>
+          <div class="hh-meta">{{ $t('household.memberCount', { count: hh.current.member_count }) }}</div>
         </div>
       </div>
       <div v-else class="hh-context-empty">

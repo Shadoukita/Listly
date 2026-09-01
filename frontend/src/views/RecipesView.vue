@@ -11,7 +11,7 @@
             <span class="hh-name">{{ hh.current?.name || 'Household' }}</span>
             <Pill v-if="auth.isAdmin" tone="accent">Admin</Pill>
           </div>
-          <div class="mono">{{ memberCount }} members</div>
+          <div class="mono">{{ $t('household.memberCount', { count: memberCount }) }}</div>
         </div>
       </div>
       <button
@@ -294,17 +294,17 @@ onMounted(async () => {
 
 .topbar {
   padding: 18px 32px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 14;
+  display: flex; align-items: center; gap: 14px;
 }
-.topbar-left { display: flex; align-items: center; gap: 12; flex: 1; }
+.topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
 .hh-avatar {
   width: 30px; height: 30px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   color: #0a0a0f; font-size: 14px; font-weight: 700;
   flex-shrink: 0;
 }
-.hh-info { flex: 1; }
-.hh-name-row { display: flex; align-items: center; gap: 8; }
+.hh-info { flex: 1; min-width: 0; }
+.hh-name-row { display: flex; align-items: center; gap: 8px; }
 .hh-name { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
 
 .random-btn {
@@ -418,5 +418,13 @@ onMounted(async () => {
 .empty-sub { font-size: 13px; color: var(--text-dim); max-width: 280px; }
 
 @media (max-width: 960px) { .recipe-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .topbar, .content { padding-left: 20px; padding-right: 20px; } .recipe-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) {
+  .topbar, .content { padding-left: 20px; padding-right: 20px; }
+  .recipe-grid { grid-template-columns: 1fr; }
+  /* Let the header wrap rather than squeezing a long household name into a
+     three-line column beside the action buttons. */
+  .topbar { flex-wrap: wrap; row-gap: 10px; }
+  .topbar-left { flex-basis: 100%; }
+  .hh-name { overflow-wrap: anywhere; }
+}
 </style>

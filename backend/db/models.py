@@ -18,6 +18,9 @@ def udict(u) -> dict:
         "profile_image":     u["profile_image"],
         "darkmode":          u["darkmode"] != 0,
         "last_household_id": u["last_household_id"],
+        # ProfileView renders a "JOINED <date>" line from this; without it the
+        # label rendered with no date after it.
+        "created_at":        u["created_at"] if "created_at" in u.keys() else None,
     }
 
 

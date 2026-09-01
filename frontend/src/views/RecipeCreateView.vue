@@ -1025,5 +1025,16 @@ function _moveStep(fromMi, fromSti, toMi, toSti) {
 .form-disabled { opacity: 0.45; pointer-events: none; }
 
 @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .topbar, .content { padding-left: 20px; padding-right: 20px; } }
+@media (max-width: 768px) {
+  .topbar, .content { padding-left: 20px; padding-right: 20px; }
+  /* "Publish to household" and "Import" were clipped past the right edge.
+     Wrap the action row and let the buttons share the width instead. */
+  .topbar { flex-wrap: wrap; row-gap: 10px; }
+  .topbar-meta { flex-basis: calc(100% - 90px); min-width: 0; }
+  .spacer { display: none; }
+  .topbar .btn { flex: 1 1 auto; justify-content: center; min-width: 0; }
+  .import-input-row { flex-wrap: wrap; row-gap: 10px; }
+  .import-input-row .url-field { flex: 1 1 100%; }
+  .import-input-row .btn { width: 100%; justify-content: center; }
+}
 </style>

@@ -64,7 +64,15 @@ onMounted(async () => {
   color: var(--text-dim);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
+  /* The icon is 20px, but the hit area must clear the 44px minimum touch
+     target (WCAG 2.5.5 / iOS HIG) — the bare icon was easy to miss. */
+  width: 44px; height: 44px;
+  margin-left: -10px;   /* keep the icon optically aligned with the 16px gutter */
+  background: transparent; border: 0; padding: 0;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
+.mobile-menu-btn:active { background: var(--surface); }
 
 @media (max-width: 768px) {
   .mobile-topbar { display: flex; }
