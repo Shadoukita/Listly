@@ -40,5 +40,6 @@
   "error.image_url_not_allowed":  "Diese Bild-URL ist nicht erlaubt",
   "error.url_not_allowed":        "Diese URL ist nicht erlaubt",
   "error.url_fetch_failed":       "URL konnte nicht abgerufen werden",
-  "error.url_scrape_failed":      "Von dieser Seite konnte kein Rezept gelesen werden"
+  "error.url_scrape_failed":      "Von dieser Seite konnte kein Rezept gelesen werden",
+  "error.no_target_household":    "Tritt einem Haushalt bei oder wähle einen aus, bevor du ein Rezept auf eine Liste schiebst"
 }

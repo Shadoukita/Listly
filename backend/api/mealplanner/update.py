@@ -3,7 +3,7 @@ from flask import g, jsonify, request
 from api.mealplanner import bp
 from core.security import token_required
 from lang.lang_config import t
-from core.utils import is_hh_admin
+from core.utils import can_view_recipe, is_hh_admin
 from db.session import get_db
 from db.models import meal_plan_dict
 
@@ -24,8 +24,14 @@ def update_meal_plan(pid):
     if not is_owner and not is_hh_admin(row["household_id"]):
         return jsonify({"error": t("error.no_access")}), 403
 
-    d       = request.get_json() or {}
+    d       = request.get_json(silent=True) or {}
     updates = {f: d[f] for f in _ALLOWED_FIELDS if f in d}
+
+    # Same leak as on create — a recipe_id the caller cannot see would come
+    # straight back out through the JOIN below.
+    if updates.get("recipe_id") is not None and not can_view_recipe(updates["recipe_id"]):
+        return jsonify({"error": t("error.no_access")}), 403
+
     if not updates:
         return jsonify(meal_plan_dict(row))
 

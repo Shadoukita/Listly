@@ -100,7 +100,7 @@ def import_recipe():
         )
         return jsonify({"error": msg}), 501
 
-    url = request.get_json().get("url", "").strip()
+    url = (request.get_json(silent=True) or {}).get("url", "").strip()
     if not url:
         return jsonify({"error": t("error.url_required")}), 400
 

@@ -11,7 +11,7 @@ from db.session import get_db
 @bp.post("/households")
 @token_required
 def create_household():
-    name = request.get_json().get("name", "").strip()
+    name = (request.get_json(silent=True) or {}).get("name", "").strip()
     if not name:
         return jsonify({"error": t("error.name_required")}), 400
 

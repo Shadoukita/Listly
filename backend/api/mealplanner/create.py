@@ -3,7 +3,7 @@ from flask import g, jsonify, request
 from api.mealplanner import bp
 from core.security import token_required
 from lang.lang_config import t
-from core.utils import get_member_role
+from core.utils import can_view_recipe, get_member_role
 from db.session import get_db
 from db.models import meal_plan_dict
 
@@ -17,7 +17,7 @@ def create_meal_plan(hid):
     if role == "restricted":
         return jsonify({"error": t("error.no_access")}), 403
 
-    d    = request.get_json() or {}
+    d    = request.get_json(silent=True) or {}
     date = (d.get("plan_date") or "").strip()
     kind = d.get("kind", "manual")
 
@@ -25,6 +25,12 @@ def create_meal_plan(hid):
         return jsonify({"error": t("error.date_required")}), 400
     if kind == "recipe" and not d.get("recipe_id"):
         return jsonify({"error": t("error.recipe_required")}), 400
+
+    # A recipe_id the caller cannot see must be rejected: the list query joins
+    # recipes and returns their name and description, so storing an arbitrary
+    # ID would leak private recipes from other households.
+    if d.get("recipe_id") is not None and not can_view_recipe(d["recipe_id"]):
+        return jsonify({"error": t("error.no_access")}), 403
     if kind == "manual" and not (d.get("title") or "").strip():
         return jsonify({"error": t("error.title_required")}), 400
 

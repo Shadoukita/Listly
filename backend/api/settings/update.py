@@ -9,7 +9,7 @@ from db.session import get_db
 @token_required
 @admin_required
 def update_settings():
-    endpoint = request.get_json().get("endpoint_url", "").strip().rstrip("/")
+    endpoint = (request.get_json(silent=True) or {}).get("endpoint_url", "").strip().rstrip("/")
     db       = get_db()
     db.execute("UPDATE settings SET endpoint_url = ? WHERE id = 1", (endpoint,))
     db.commit()

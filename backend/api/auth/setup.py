@@ -16,7 +16,7 @@ def setup():
     if row and row["setup_done"]:
         return jsonify({"error": t("error.setup_done")}), 400
 
-    d        = request.get_json()
+    d        = (request.get_json(silent=True) or {})
     username = d.get("username", "").strip()
     password = d.get("password", "")
     endpoint = d.get("endpoint_url", "").strip().rstrip("/")

@@ -11,7 +11,7 @@ from db.session import get_db
 @bp.post("/households/join")
 @token_required
 def join_by_code():
-    code = request.get_json().get("invite_code", "").strip()
+    code = (request.get_json(silent=True) or {}).get("invite_code", "").strip()
     db   = get_db()
     hh   = db.execute(
         "SELECT * FROM households WHERE invite_code = ?", (code,)

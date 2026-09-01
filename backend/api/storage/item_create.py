@@ -3,7 +3,7 @@ from flask import g, jsonify, request
 from api.storage import bp
 from core.security import token_required
 from lang.lang_config import t
-from core.utils import get_member_role
+from core.utils import get_member_role, location_in_household
 from db.session import get_db
 from db.models import storage_item_dict
 
@@ -17,13 +17,16 @@ def create_storage_item(hid):
     if role == "restricted":
         return jsonify({"error": t("error.no_access")}), 403
 
-    d    = request.get_json() or {}
+    d    = request.get_json(silent=True) or {}
     name = (d.get("name") or "").strip()
     if not name:
         return jsonify({"error": t("error.name_required")}), 400
 
     location_id = d.get("location_id")
     if not location_id:
+        return jsonify({"error": t("error.not_found")}), 400
+    # Must be a location of *this* household, not an arbitrary ID
+    if not location_in_household(location_id, hid):
         return jsonify({"error": t("error.not_found")}), 400
 
     db  = get_db()

@@ -40,5 +40,6 @@
   "error.image_url_not_allowed":  "That image URL is not allowed",
   "error.url_not_allowed":        "That URL is not allowed",
   "error.url_fetch_failed":       "Could not fetch that URL",
-  "error.url_scrape_failed":      "Could not read a recipe from that page"
+  "error.url_scrape_failed":      "Could not read a recipe from that page",
+  "error.no_target_household":    "Join or select a household before pushing a recipe to a list"
 }
