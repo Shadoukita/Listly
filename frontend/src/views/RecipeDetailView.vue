@@ -429,7 +429,7 @@ onMounted(async () => {
 
 .topbar {
   padding: 14px 32px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12;
+  display: flex; align-items: center; gap: 12px;
 }
 .back-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -559,7 +559,7 @@ onMounted(async () => {
 .push-cta {
   margin-top: 14px; padding: 14px; border-radius: 14px;
   background: var(--accent-dim); border: 1px solid rgba(199,155,255,0.2);
-  display: flex; align-items: center; gap: 12; cursor: pointer;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
 }
 .push-icon {
   width: 32px; height: 32px; border-radius: 9px;
@@ -606,5 +606,14 @@ onMounted(async () => {
 .loading-state { display: flex; align-items: center; justify-content: center; padding: 100px 20px; }
 
 @media (max-width: 900px) { .body-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .topbar, .content { padding-left: 20px; padding-right: 20px; } .hero-img { height: 200px; } }
+@media (max-width: 768px) {
+  .topbar, .content { padding-left: 20px; padding-right: 20px; }
+  .hero-img { height: 200px; }
+  /* Back / Favorite / Edit / Delete do not fit on one phone row — "Delete
+     recipe" was clipped past the right edge. Wrap instead of overflowing. */
+  .topbar { flex-wrap: wrap; row-gap: 10px; }
+  .topbar .spacer { display: none; }
+  .back-btn { flex-basis: 100%; justify-content: center; }
+  .topbar .btn { flex: 1 1 auto; justify-content: center; min-width: 0; }
+}
 </style>

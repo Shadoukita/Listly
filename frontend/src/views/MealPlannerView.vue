@@ -9,7 +9,7 @@
           <span class="hh-name">{{ hh.current?.name }}</span>
           <Pill v-if="isHhAdmin" tone="accent">{{ $t('household.roles.' + (hh.current?.role || 'member')) }}</Pill>
         </div>
-        <span class="mono dim">{{ hh.current?.member_count }} {{ $t('household.memberCount', { count: '' }).replace('{count}', '').trim() }} members</span>
+        <span class="mono dim">{{ $t('household.memberCount', { count: hh.current?.member_count ?? 0 }) }}</span>
       </div>
       <!-- scope switch -->
       <div class="seg-ctrl">
@@ -810,7 +810,7 @@ async function onDropDay(targetDate) {
   align-items: center;
   gap: 10px;
 }
-.period-label { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; margin-left: 4px; }
+.period-label { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; margin-left: 4px; white-space: nowrap; }
 
 /* Selection bar */
 .select-bar {
@@ -948,13 +948,17 @@ async function onDropDay(targetDate) {
 /* Weekly */
 .week-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* minmax(0, 1fr) — NOT plain 1fr. A plain 1fr track cannot shrink below its
+     content's min-content width, so long recipe titles blew the tracks past the
+     container and pushed whole days off-screen on narrow viewports. */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
   min-height: 520px;
 }
 .week-col {
   display: flex;
   flex-direction: column;
+  min-width: 0;          /* let the column shrink instead of forcing the track wider */
   gap: 8px;
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -993,7 +997,7 @@ async function onDropDay(targetDate) {
   background: transparent;
 }
 .week-num.today { background: var(--accent); color: var(--accent-ink); }
-.week-col-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.week-col-body { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
 
 /* Monthly */
 .month-dow-row {
@@ -1243,10 +1247,23 @@ async function onDropDay(targetDate) {
 /* Mobile */
 @media (max-width: 768px) {
   .context-bar, .title-row, .nav-row, .body-scroll { padding-left: 16px; padding-right: 16px; }
-  .week-grid { grid-template-columns: repeat(3, 1fr); }
-  .month-grid { grid-template-columns: repeat(7, 1fr); }
+  .week-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .month-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .month-cell { min-height: 60px; padding: 4px; }
   .select-bar { margin: 0 16px 10px; }
   .title-row { flex-direction: column; align-items: flex-start; }
+  /* Wrap the header rows — previously "Add plan" and the scope switch were
+     clipped off the right edge with no horizontal scroll to reach them. */
+  .context-bar { flex-wrap: wrap; }
+  .context-bar .seg-ctrl { width: 100%; }
+  .context-bar .seg-btn { flex: 1; justify-content: center; }
+  .nav-row { flex-wrap: wrap; row-gap: 10px; }
+  .nav-row .flex1 { flex-basis: 100%; height: 0; }
+}
+
+@media (max-width: 520px) {
+  /* One day per row: at phone widths a 2-up week is unreadable */
+  .week-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .week-col { min-height: 96px; }
 }
 </style>

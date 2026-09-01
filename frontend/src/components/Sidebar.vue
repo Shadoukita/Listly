@@ -50,7 +50,7 @@
             <Avatar :name="h.name" :color="hhColor(h)" :size="26" :round="false" />
             <div class="hh-info">
               <div class="hh-name">{{ h.name }}</div>
-              <div class="hh-meta">{{ h.member_count }} members</div>
+              <div class="hh-meta">{{ $t('household.memberCount', { count: h.member_count }) }}</div>
             </div>
             <div v-if="hh.current?.id === h.id" class="hh-dot" />
             <button v-if="h.role === 'admin' || h.role === 'owner'" class="hh-settings-btn" @click.stop="openSettings(h)" :title="$t('sidebar.householdSettings')">
