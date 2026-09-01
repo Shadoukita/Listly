@@ -36,7 +36,13 @@ RUN mkdir -p /data/assets/recipes /data/assets/users \
     && chown -R listly:listly /data /app
 
 COPY docker/entrypoint.py /usr/local/bin/docker-entrypoint.py
-RUN chmod +x /usr/local/bin/docker-entrypoint.py
+# This repo is developed on Windows. If the entrypoint is ever checked out with
+# CRLF, the kernel reads the shebang as "python3\r", fails to find it, and the
+# container dies with exit 127 before printing a single line. Strip CR, then
+# prove the result is a valid script rather than discovering it at runtime.
+RUN sed -i "s/\r$//" /usr/local/bin/docker-entrypoint.py \
+    && chmod +x /usr/local/bin/docker-entrypoint.py \
+    && python3 -c "import ast,pathlib;ast.parse(pathlib.Path('/usr/local/bin/docker-entrypoint.py').read_text())"
 
 ENV DATABASE=/data/database.db
 ENV DIST_DIR=/frontend/dist
