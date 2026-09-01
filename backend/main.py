@@ -4,6 +4,9 @@ Entry point.
   Production / Docker:  set SECRET_KEY in the environment or in backend/.env
   Local dev:            python main.py  (key is auto-generated and saved to .env)
 
+  ENV_FILE overrides where a generated key is written (Docker points it at the
+  /data volume so the key survives image upgrades).
+
   WSGI:  gunicorn "main:app"
 """
 import os
@@ -19,7 +22,13 @@ from dotenv import load_dotenv, set_key
 #   2. SECRET_KEY in backend/.env             ← local dev, persists across restarts
 #   3. Generate + save to backend/.env        ← first local run
 
-_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+# Where the auto-generated key is persisted. Defaults to backend/.env for local
+# dev. Docker overrides it to /data/.env — the mounted volume — because the
+# container's own filesystem is discarded on every image upgrade, which would
+# silently mint a new key and sign every user out.
+_ENV_FILE = os.environ.get("ENV_FILE") or os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), ".env"
+)
 
 load_dotenv(_ENV_FILE)
 

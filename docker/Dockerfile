@@ -36,6 +36,10 @@ ENV DATABASE=/data/database.db
 ENV DIST_DIR=/frontend/dist
 ENV ASSETS_DIR=/data/assets
 ENV PORT=5000
+# Persist an auto-generated SECRET_KEY on the volume. Without this it lands in
+# the container's writable layer and is regenerated on every image upgrade,
+# invalidating every session. Passing SECRET_KEY explicitly still takes priority.
+ENV ENV_FILE=/data/.env
 
 USER listly
 
